@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pong - gra w JavaScript</title>
+<style>/* style css, canvasa nie określa się stylami css, gdyż mogą pojawić się problemy!!! */
+    body {
+        margin: 0;
+        padding: 0;/*wyśrodkowanie canvasu na stronie*/
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;/* body ma wysokość okna przeglądarki */
+        background-color: #04270f;      
+    }
+    
+    canvas {
+        border: 3px solid #fff;
+    }    
+</style>
+</head>
+<body>
+    <canvas>
+    </canvas>
+    
+    <script>
+        const canvas = document.querySelector('canvas');//służy do znalezienia pojedynczego elementu
+        //przypisanie kontekstu graficznego - nowe właściwośći i metody, do których odwołamy się za pomocą obiektu ctx
+        const ctx = canvas.getContext('2d');//tworzymy obiekt z właściwościami potrzebnymi do rysowania, np. do zmiany koloru; pobieramy do obiekty ctx wszystko, co jest potrzebne do pracy w canvasie: metody itd.
+        //teraz mamy już możliwość pracy nad canvasem
+        
+        canvas.width = 1000;
+        canvas.height = 500;     
+        const cw = canvas.width;
+        const ch = canvas.height;
+        
+        const ballSize = 20;//wielkość piłki, x i y będą takiej wielkości, piłka będzie w kształcie kwadratu
+        let ballX = cw / 2 - ballSize / 2;//od 490px do 510px
+        let ballY = ch / 2 - ballSize / 2;//od 240px do 260px
+        
+        const paddleHeight = 100;//wysokość paletki
+        const paddleWidth = 20;//szerokość paletki
+        
+        const playerX = 70;//odległość paletki od lewej krawędzi canvasa jest stała
+        const aiX = 910;//odległość paletki komputera od prawej krawędzi canvasa to 1000(szerokość canvasa) - 70(odległość paletki komputera od prawej krawędzi canvasa) - 20(szerokość paletki komputera, bo jest rysowana od LEWEJ strony)
+        
+        let playerY = 200;//wskazuje pozycję lewgo, górnego rogu plaetki gracza
+        let aiY = 200;//wskazuje pozycję lewgo, górnego rogu plaetki komputera
+              
+        const lineWidth = 6;
+        const lineHeight = 16;
+        
+        let ballSpeedX = 1;
+        let ballSpeedY = 1;
+        
+        function player() {//rysuję rakietkę
+            ctx.fillStyle = "green";
+            ctx.fillRect(playerX, playerY, paddleWidth, paddleHeight);//będzie dokładnie na środku
+        }
+        
+        function ai() {//rysuję rakietkę
+            ctx.fillStyle = "yellow";
+            ctx.fillRect(aiX, aiY, paddleWidth, paddleHeight);//będzie dokładnie na środku
+        }
+        
+        function ball() {//rysuję piłkę
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(ballX, ballY, ballSize, ballSize);
+            
+            ballX += ballSpeedX;//gdzie jest piłka na osi x
+            ballY += ballSpeedY;//gdzie jest piłka na osi y
+            
+            if (ballY <= 0 || ballY + ballSize >= ch) {//dodajemy ballSize, bo piłka jest rysowana od górnego lewego punktu
+                ballSpeedY = -ballSpeedY;//odpowiada za to, aby piłka się odbiła od krawędzi
+                speedUp(); //przyspieszenie po zderzeniu z górną krawędzią canvasa
+            }
+            
+            if (ballX <= 0 || ballX >= cw - ballSize) {
+                ballSpeedX = -ballSpeedX;//odpowiada za to, aby piłka się odbiła od krawędzi
+                speedUp();
+            }
+        }
+        
+        function table() {//funkcja dotycząca canvasu
+            //stół
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, cw, ch);
+            //linie na środku
+            for (let linePosition = 20; linePosition < ch; linePosition += 30) {
+                ctx.fillStyle = "gray";
+                ctx.fillRect(cw / 2 - lineWidth / 2, linePosition, lineWidth, lineHeight);//linia jest rysowana od góry
+            }
+        }
+        
+        topCanvas = canvas.offsetTop; //podanie informacji ile miejsca jest od góry okna przeglądarki do górnej krawędzi canvasu
+        
+        function playerPosition(e) {//e=event-przekazuje wiele informacji o zdarzeniu
+            //console.log("pozycja myszy to " + (e.clientY - topCanvas));// -> umożliwia podanie lokalizacji myszki od górnej krawędzi do dolnej krawędzi canvasu, llicząc od 0
+            playerY = e.clientY - topCanvas - paddleHeight / 2;//każdorazowa zmiana pozycji paletki gracza 60razy na sekundę, licząc od środka rakietki
+        
+             //gry rakietka na dole próbuje wyjechać poza canvas
+            if (playerY >= ch - paddleHeight) {
+                playerY = ch - paddleHeight
+            }
+
+            //gry rakietka na górze próbuje wyjechać poza canvas
+            if (playerY <= 0) {
+                playerY = 0;
+            }
+            
+            aiY = playerY;
+        }
+        
+        function speedUp() {
+            console.log(ballSpeedX + ' ' + ballSpeedY);
+            //predkosc X, if i else if, bo ruch w lewo i w prawo jest inaczej ustalony
+            if (ballSpeedX > 0 && ballSpeedX < 16) {//16 to maksymalne przyspieszenie, 16 sami sobie ustawiamy
+            ballSpeedX += 1;
+            }
+            else if (ballSpeedX < 0 && ballSpeedX > -16) {//16 to maksymalne przyspieszenie, 16 sami sobie ustawiamy
+            ballSpeedX -= 1 ;
+            }
+            
+             //predkosc Y
+            if (ballSpeedY > 0 && ballSpeedY < 16) {//16 to maksymalne przyspieszenie, 16 sami sobie ustawiamy
+            ballSpeedY += 1;
+            }
+            else if (ballSpeedY < 0 && ballSpeedY > -16) {//16 to maksymalne przyspieszenie, 16 sami sobie ustawiamy
+            ballSpeedY -= 1;
+            }
+        }
+        
+        //sztuczna inteligencja paletki komputera ai
+        function aiPosition() {
+            
+        }
+        
+        canvas.addEventListener("mousemove", 
+        playerPosition
+        )//wywołanie metody dla canvasu, gdy następuje jakiś typ zdarzenia, np. "click", "scroll", "mousemove", nasłuchiwanie tylko dla obszau canvasu!
+    
+        function game() {
+        table();//musi być pierwsze!
+        ball();
+        player();
+        ai();
+        aiPosition();
+        }
+        
+        //zapis ruchu piłeczki
+        setInterval(game, 16)//wywołanie funkcji game co 25 milisekund
+        
+    </script>
+</body>
+</html>
